@@ -1,0 +1,2779 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Pukul Dua Pagi - Particle Lyric</title>
+
+
+<style>
+
+/* ==================================================
+   RESET
+================================================== */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+html,
+body {
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+
+    background: #020308;
+}
+
+
+body {
+
+    position: relative;
+
+    color: #ffffff;
+}
+
+
+/* ==================================================
+   BACKGROUND CANVAS
+================================================== */
+
+#smoke-canvas {
+
+    position: fixed;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    z-index: 1;
+
+    pointer-events: none;
+}
+
+
+/* ==================================================
+   LYRIC CANVAS
+================================================== */
+
+#lyric-canvas {
+
+    position: fixed;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    z-index: 10;
+
+    pointer-events: none;
+}
+
+
+/* ==================================================
+   VIGNETTE
+================================================== */
+
+.vignette {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 20;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            transparent 42%,
+            rgba(0, 0, 0, 0.35) 100%
+        );
+}
+
+
+/* ==================================================
+   SCANLINES
+================================================== */
+
+.scanlines {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 21;
+
+    pointer-events: none;
+
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(255,255,255,0.018) 0px,
+            rgba(255,255,255,0.018) 1px,
+            transparent 1px,
+            transparent 4px
+        );
+
+    opacity: 0.35;
+}
+
+
+/* ==================================================
+   START OVERLAY
+================================================== */
+
+#start-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 100;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    transition:
+        opacity 0.6s ease;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div id="start-overlay"></div>
+
+
+<canvas id="smoke-canvas"></canvas>
+
+
+<canvas id="lyric-canvas"></canvas>
+
+
+<div class="vignette"></div>
+
+<div class="scanlines"></div>
+
+
+<audio
+    id="audio-player"
+    preload="auto"
+>
+
+    <source
+        src="lagu.mp3"
+        type="audio/mpeg"
+    >
+
+</audio>
+
+
+<script>
+
+
+/* ========================================================
+   1. DATA LIRIK
+======================================================== */
+
+const lyricsData = [
+
+    {
+        time: 0.0,
+        text: "Ooh Makassar kita berjuang"
+    },
+
+    {
+        time: 7.0,
+        text: "Nyalakan asa dalam dada"
+    },
+
+    {
+        time: 14.6,
+        text: "Pukul dua pagi modul masih terbuka lebar sekali"
+    },
+
+    {
+        time: 18.5,
+        text: "Kopi hitam menemani lelah di sudut kota ini"
+    },
+
+    {
+        time: 22.0,
+        text: "Setiap LMS terisi tugas tiada pernah berhenti berderet"
+    },
+
+    {
+        time: 26.0,
+        text: "Demi mimpi mulia menjadi guru yang profesional sejati"
+    },
+
+    {
+        time: 30.0,
+        text: "Refleksi diri tertulis dalam setiap lembar portofolio"
+    },
+
+    {
+        time: 34.0,
+        text: "Lelah raga ini takkan membuat surut langkah kami"
+    },
+
+    {
+        time: 37.5,
+        text: "Makassar saksi bisu perjuangan anak PPG yang tangguh"
+    },
+
+    {
+        time: 40.5,
+        text: "Membakar semangat juang di bawah terik matahari membara"
+    },
+
+    {
+        time: 43.6,
+        text: "PPL di depan mata kita siap mengabdi penuh"
+    },
+
+    {
+        time: 47.0,
+        text: "Menghadapi siswa dengan senyuman tulus di wajah"
+    },
+
+    {
+        time: 50.5,
+        text: "Bukan sekadar gelar yang kini tengah kita kejar"
+    },
+
+    {
+        time: 54.0,
+        text: "Tapi masa depan bangsa yang siap kita fajar"
+    },
+
+    {
+        time: 58.2,
+        text: "Bangkitlah wahai para calon guru hebat bangkitlah!"
+    },
+
+    {
+        time: 62.0,
+        text: "Di kota Makassar ini kita ukir sejarah indah"
+    },
+
+    {
+        time: 65.5,
+        text: "Tembus semua batas ujian yang begitu berat menguji"
+    },
+
+    {
+        time: 69.0,
+        text: "Sertifikasi di tangan masa depan kan kita bentang"
+    },
+
+    {
+        time: 73.0,
+        text: "Bangkitlah wahai para pejuang tanpa tanda jasa!"
+    },
+
+    {
+        time: 76.5,
+        text: "Langkah kita pasti membawa terang bagi semua jiwa"
+    },
+
+    {
+        time: 80.0,
+        text: "PPG ini jalan pengabdian suci kita bersama"
+    },
+
+    {
+        time: 83.5,
+        text: "Menuju Indonesia emas yang gemilang dan benderang"
+    },
+
+    {
+        time: 87.3,
+        text: "UKIN dan UP kini tegak menanti di depan mata"
+    },
+
+    {
+        time: 91.0,
+        text: "Ujian pamungkas yang menuntut semua fokus dan tenaga"
+    },
+
+    {
+        time: 95.0,
+        text: "Keringat dingin bercucuran di dahi yang penuh penat"
+    },
+
+    {
+        time: 98.5,
+        text: "Namun keyakinan di dada tak pernah padam menyala senantiasa"
+    },
+
+    {
+        time: 102.5,
+        text: "Kita adalah generasi pembaharu yang dinanti bangsa ini"
+    },
+
+    {
+        time: 106.0,
+        text: "Membawa perubahan lewat ilmu dan kasih yang sejati"
+    },
+
+    {
+        time: 109.5,
+        text: "Dari Makassar untuk dunia kita kan terbang tinggi melesat"
+    },
+
+    {
+        time: 113.0,
+        text: "Membuktikan bahwa lelah ini akan berbuah manis nanti"
+    },
+
+    {
+        time: 116.4,
+        text: "🎸 Melodi Gitar / Solo"
+    },
+
+    {
+        time: 129.4,
+        text: "Bangkitlah wahai para calon guru hebat bangkitlah!"
+    },
+
+    {
+        time: 133.0,
+        text: "Di kota Makassar ini kita ukir sejarah indah"
+    },
+
+    {
+        time: 136.5,
+        text: "Tembus semua batas ujian yang begitu berat menguji"
+    },
+
+    {
+        time: 140.0,
+        text: "Sertifikasi di tangan masa depan kan kita bentang"
+    },
+
+    {
+        time: 144.0,
+        text: "Bangkitlah wahai para pejuang tanpa tanda jasa!"
+    },
+
+    {
+        time: 147.5,
+        text: "Langkah kita pasti membawa terang bagi semua jiwa"
+    },
+
+    {
+        time: 151.0,
+        text: "PPG ini jalan pengabdian suci kita bersama"
+    },
+
+    {
+        time: 154.5,
+        text: "Menuju Indonesia emas yang gemilang dan benderang"
+    },
+
+    {
+        time: 158.5,
+        text: "Kita pasti bisa melewatinya wahai temanku semua"
+    },
+
+    {
+        time: 163.5,
+        text: "Guru profesional masa depan lahir dari kota Makassar ini"
+    },
+
+    {
+        time: 168.5,
+        text: "Demi Indonesia tercinta kita kan terus berjuang"
+    },
+
+    {
+        time: 171.5,
+        text: "Selesai"
+    }
+
+];
+
+
+/* ========================================================
+   2. AUDIO
+======================================================== */
+
+const audio =
+    document.getElementById(
+        "audio-player"
+    );
+
+
+const overlay =
+    document.getElementById(
+        "start-overlay"
+    );
+
+
+let started = false;
+
+let audioStarted = false;
+
+let visualStartTime = 0;
+
+
+/* ========================================================
+   AUDIO START
+======================================================== */
+
+async function startAudio() {
+
+    try {
+
+        await audio.play();
+
+        /*
+           Status audio dikonfirmasi melalui event "playing".
+           Lirik tidak dimulai hanya karena play() dipanggil.
+        */
+
+        overlay.style.opacity = "0";
+
+        setTimeout(
+            () => {
+                overlay.style.display = "none";
+            },
+            600
+        );
+
+    } catch (error) {
+
+        audioStarted = false;
+
+        console.log(
+            "Audio belum dapat diputar. Klik layar untuk mencoba lagi."
+        );
+    }
+}
+
+
+/* ========================================================
+   STATUS PEMUTARAN AUDIO
+======================================================== */
+
+audio.addEventListener("playing", () => {
+    audioStarted = true;
+    started = true;
+});
+
+audio.addEventListener("pause", () => {
+    audioStarted = false;
+});
+
+audio.addEventListener("ended", () => {
+    audioStarted = false;
+    currentLyricIndex = -1;
+    lyricParticles = [];
+
+    lyricCtx.clearRect(
+        0,
+        0,
+        lyricW,
+        lyricH
+    );
+});
+
+
+/* ========================================================
+   START OVERLAY
+======================================================== */
+
+overlay.addEventListener(
+    "click",
+    () => {
+        if (!audioStarted) {
+            startAudio();
+        }
+    }
+);
+
+
+/* ========================================================
+   TRY AUTOPLAY
+======================================================== */
+
+window.addEventListener(
+    "load",
+    () => {
+        visualStartTime = performance.now();
+
+        setTimeout(() => {
+            startAudio();
+        }, 150);
+    }
+);
+
+
+/* ========================================================
+   3. LYRIC CANVAS
+======================================================== */
+
+const lyricCanvas =
+    document.getElementById(
+        "lyric-canvas"
+    );
+
+
+const lyricCtx =
+    lyricCanvas.getContext(
+        "2d"
+    );
+
+
+let lyricW = 0;
+
+let lyricH = 0;
+
+let lyricDPR = 1;
+
+
+/* ========================================================
+   RESIZE LYRIC CANVAS
+======================================================== */
+
+function resizeLyricCanvas() {
+
+    lyricDPR =
+        Math.min(
+            window.devicePixelRatio || 1,
+            2
+        );
+
+
+    lyricW =
+        window.innerWidth;
+
+
+    lyricH =
+        window.innerHeight;
+
+
+    lyricCanvas.width =
+        Math.floor(
+            lyricW *
+            lyricDPR
+        );
+
+
+    lyricCanvas.height =
+        Math.floor(
+            lyricH *
+            lyricDPR
+        );
+
+
+    lyricCanvas.style.width =
+        lyricW + "px";
+
+
+    lyricCanvas.style.height =
+        lyricH + "px";
+
+
+    lyricCtx.setTransform(
+        lyricDPR,
+        0,
+        0,
+        lyricDPR,
+        0,
+        0
+    );
+}
+
+
+window.addEventListener(
+    "resize",
+    resizeLyricCanvas
+);
+
+
+resizeLyricCanvas();
+
+
+/* ========================================================
+   4. PARTICLE SETTINGS
+======================================================== */
+
+const PARTICLE_STEP = 2;
+
+const PARTICLE_RADIUS = 1.15;
+
+const FORM_DURATION = 0.55;
+
+const SPREAD_DURATION = 0.55;
+
+const SCATTER_X = 190;
+
+const SCATTER_Y = 115;
+
+const TEXT_MAX_WIDTH = 0.90;
+
+
+/* ========================================================
+   5. TEXT CANVAS
+======================================================== */
+
+const textCanvas =
+    document.createElement(
+        "canvas"
+    );
+
+
+const textCtx =
+    textCanvas.getContext(
+        "2d"
+    );
+
+
+/* ========================================================
+   6. CREATE TEXT TARGETS
+======================================================== */
+
+function createTextTargets(
+    text
+) {
+
+    const isMobile =
+        lyricW <= 768;
+
+
+    let fontSize;
+
+
+    if (isMobile) {
+
+        /* Ukuran mobile dipertahankan persis seperti kode asli. */
+        fontSize =
+            Math.max(
+                24,
+                Math.min(
+                    43,
+                    lyricW * 0.075
+                )
+            );
+
+    } else {
+
+        /* Desktop: lirik lebih kecil dan tetap terpusat. */
+        fontSize =
+            Math.max(
+                16,
+                Math.min(
+                    24,
+                    lyricW * 0.020
+                )
+            );
+    }
+
+
+    const font =
+        `700 ${fontSize}px Arial, Segoe UI, sans-serif`;
+
+
+    textCtx.font =
+        font;
+
+
+    const words =
+        text.split(" ");
+
+
+    const lines = [];
+
+    let currentLine = "";
+
+    const maxWidth = isMobile
+        ? lyricW * TEXT_MAX_WIDTH
+        :lyricW * 0.3;
+
+    for (
+        const word
+        of words
+    ) {
+
+        const testLine =
+            currentLine
+                ? currentLine +
+                  " " +
+                  word
+                : word;
+
+
+        const width =
+            textCtx.measureText(
+                testLine
+            ).width;
+
+
+        if (
+            width >
+            maxWidth &&
+            currentLine
+        ) {
+
+            lines.push(
+                currentLine
+            );
+
+
+            currentLine =
+                word;
+
+        } else {
+
+            currentLine =
+                testLine;
+        }
+    }
+
+
+    if (currentLine) {
+
+        lines.push(
+            currentLine
+        );
+    }
+
+
+    const lineHeight =
+        fontSize * 1.25;
+
+
+    const totalHeight =
+        lines.length *
+        lineHeight;
+
+
+    const targets = [];
+
+
+    for (
+        let lineIndex = 0;
+        lineIndex < lines.length;
+        lineIndex++
+    ) {
+
+        const line =
+            lines[lineIndex];
+
+
+        const lineWidth =
+            textCtx.measureText(
+                line
+            ).width;
+
+
+        textCanvas.width =
+            Math.ceil(
+                lineWidth + 30
+            );
+
+
+        textCanvas.height =
+            Math.ceil(
+                lineHeight + 30
+            );
+
+
+        textCtx.clearRect(
+            0,
+            0,
+            textCanvas.width,
+            textCanvas.height
+        );
+
+
+        textCtx.font =
+            font;
+
+
+        textCtx.textAlign =
+            "center";
+
+
+        textCtx.textBaseline =
+            "middle";
+
+
+        textCtx.fillStyle =
+            "#ffffff";
+
+
+        textCtx.fillText(
+            line,
+            textCanvas.width / 2,
+            textCanvas.height / 2
+        );
+
+
+        const imageData =
+            textCtx.getImageData(
+                0,
+                0,
+                textCanvas.width,
+                textCanvas.height
+            );
+
+
+        const lineY =
+            lyricH / 2 -
+            totalHeight / 2 +
+            lineIndex *
+            lineHeight;
+
+
+        for (
+            let y = 0;
+            y < textCanvas.height;
+            y += PARTICLE_STEP
+        ) {
+
+            for (
+                let x = 0;
+                x < textCanvas.width;
+                x += PARTICLE_STEP
+            ) {
+
+                const pixelIndex =
+                    (
+                        y *
+                        textCanvas.width +
+                        x
+                    ) * 4;
+
+
+                const alpha =
+                    imageData.data[
+                        pixelIndex + 3
+                    ];
+
+
+                if (
+                    alpha > 80
+                ) {
+
+                    const targetX =
+                        lyricW / 2 -
+                        lineWidth / 2 +
+                        x -
+                        15;
+
+
+                    const targetY =
+                        lineY -
+                        lineHeight / 2 +
+                        y -
+                        15;
+
+
+                    targets.push({
+
+                        x: targetX,
+
+                        y: targetY
+
+                    });
+                }
+            }
+        }
+    }
+
+
+    return targets;
+}
+
+
+/* ========================================================
+   7. PARTICLE ARRAY
+======================================================== */
+
+let lyricParticles = [];
+
+
+/* ========================================================
+   8. CURRENT LYRIC
+======================================================== */
+
+let currentLyricIndex = -1;
+
+
+/* ========================================================
+   9. LYRIC TIME
+======================================================== */
+
+function getCurrentTime() {
+
+    /* Waktu lirik selalu mengikuti waktu audio asli. */
+    if (
+        audioStarted &&
+        !audio.paused &&
+        !audio.ended
+    ) {
+        return audio.currentTime;
+    }
+
+    /* Jangan gunakan waktu animasi sebagai pengganti audio. */
+    return -1;
+}
+
+
+/* ========================================================
+   10. CREATE PARTICLE
+======================================================== */
+
+function createParticle(
+    target
+) {
+
+    const angle =
+        Math.random() *
+        Math.PI *
+        2;
+
+
+    const distanceX =
+        SCATTER_X *
+        (
+            0.55 +
+            Math.random() *
+            0.75
+        );
+
+
+    const distanceY =
+        SCATTER_Y *
+        (
+            0.55 +
+            Math.random() *
+            0.75
+        );
+
+
+    const scatterX =
+        target.x +
+        Math.cos(angle) *
+        distanceX;
+
+
+    const scatterY =
+        target.y +
+        Math.sin(angle) *
+        distanceY;
+
+
+    return {
+
+        x: scatterX,
+
+        y: scatterY,
+
+
+        targetX:
+            target.x,
+
+        targetY:
+            target.y,
+
+
+        scatterX:
+            scatterX,
+
+        scatterY:
+            scatterY,
+
+
+        size:
+            PARTICLE_RADIUS *
+            (
+                0.70 +
+                Math.random() *
+                0.55
+            ),
+
+
+        alpha: 1,
+
+
+        phase:
+            Math.random() *
+            Math.PI *
+            2,
+
+
+        drift:
+            0.5 +
+            Math.random() *
+            0.8
+    };
+}
+
+
+/* ========================================================
+   11. SET LYRIC
+======================================================== */
+
+function setLyric(
+    index
+) {
+
+    if (
+        index < 0 ||
+        index >= lyricsData.length
+    ) {
+
+        return;
+    }
+
+
+    currentLyricIndex =
+        index;
+
+
+    const targets =
+        createTextTargets(
+            lyricsData[index].text
+        );
+
+
+    lyricParticles = [];
+
+
+    for (
+        const target
+        of targets
+    ) {
+
+        lyricParticles.push(
+            createParticle(
+                target
+            )
+        );
+    }
+}
+
+
+/* ========================================================
+   12. EASING
+======================================================== */
+
+function easeInOutCubic(
+    t
+) {
+
+    t =
+        Math.max(
+            0,
+            Math.min(
+                1,
+                t
+            )
+        );
+
+
+    if (
+        t < 0.5
+    ) {
+
+        return 4 *
+            t *
+            t *
+            t;
+    }
+
+
+    return 1 -
+        Math.pow(
+            -2 * t + 2,
+            3
+        ) / 2;
+}
+
+
+/* ========================================================
+   13. UPDATE PARTICLES
+======================================================== */
+
+function updateLyricParticles(
+    currentTime
+) {
+
+    if (
+        currentLyricIndex <
+        0
+    ) {
+
+        return;
+    }
+
+
+    const lyric =
+        lyricsData[
+            currentLyricIndex
+        ];
+
+
+    const elapsed =
+        currentTime -
+        lyric.time;
+
+
+    let nextTime =
+        Infinity;
+
+
+    if (
+        currentLyricIndex + 1 <
+        lyricsData.length
+    ) {
+
+        nextTime =
+            lyricsData[
+                currentLyricIndex + 1
+            ].time;
+    }
+
+
+    const interval =
+        nextTime -
+        lyric.time;
+
+
+    /* ==================================================
+       FORM
+    ================================================== */
+
+    if (
+        elapsed <=
+        FORM_DURATION
+    ) {
+
+        const progress =
+            Math.min(
+                1,
+                Math.max(
+                    0,
+                    elapsed /
+                    FORM_DURATION
+                )
+            );
+
+
+        const eased =
+            easeInOutCubic(
+                progress
+            );
+
+
+        for (
+            const p
+            of lyricParticles
+        ) {
+
+            p.x =
+                p.scatterX +
+                (
+                    p.targetX -
+                    p.scatterX
+                ) *
+                eased;
+
+
+            p.y =
+                p.scatterY +
+                (
+                    p.targetY -
+                    p.scatterY
+                ) *
+                eased;
+
+
+            p.alpha =
+                0.15 +
+                0.85 *
+                eased;
+        }
+
+
+        return;
+    }
+
+
+    /* ==================================================
+       SPREAD START
+    ================================================== */
+
+    const spreadStart =
+        Math.max(
+            FORM_DURATION,
+            interval -
+            SPREAD_DURATION
+        );
+
+
+    /* ==================================================
+       HOLD
+    ================================================== */
+
+    if (
+        elapsed <
+        spreadStart
+    ) {
+
+        for (
+            const p
+            of lyricParticles
+        ) {
+
+            p.x =
+                p.targetX;
+
+
+            p.y =
+                p.targetY;
+
+
+            p.alpha =
+                1;
+        }
+
+
+        return;
+    }
+
+
+    /* ==================================================
+       SPREAD
+    ================================================== */
+
+    const spreadElapsed =
+        elapsed -
+        spreadStart;
+
+
+    const spreadProgress =
+        Math.min(
+            1,
+            Math.max(
+                0,
+                spreadElapsed /
+                SPREAD_DURATION
+            )
+        );
+
+
+    const eased =
+        easeInOutCubic(
+            spreadProgress
+        );
+
+
+    for (
+        const p
+        of lyricParticles
+    ) {
+
+        p.x =
+            p.targetX +
+            (
+                p.scatterX -
+                p.targetX
+            ) *
+            eased;
+
+
+        p.y =
+            p.targetY +
+            (
+                p.scatterY -
+                p.targetY
+            ) *
+            eased;
+
+
+        p.alpha =
+            1 -
+            eased * 0.85;
+    }
+}
+
+
+/* ========================================================
+   14. DRAW LYRIC
+======================================================== */
+
+function drawLyric(
+    currentTime
+) {
+
+    lyricCtx.clearRect(
+        0,
+        0,
+        lyricW,
+        lyricH
+    );
+
+
+    if (
+        currentLyricIndex <
+        0
+    ) {
+
+        return;
+    }
+
+
+    const gradient =
+        lyricCtx.createLinearGradient(
+            lyricW * 0.25,
+            0,
+            lyricW * 0.75,
+            0
+        );
+
+
+    gradient.addColorStop(
+        0,
+        "#f59e0b"
+    );
+
+
+    gradient.addColorStop(
+        0.5,
+        "#fbbf24"
+    );
+
+
+    gradient.addColorStop(
+        1,
+        "#fde68a"
+    );
+
+
+    lyricCtx.fillStyle =
+        gradient;
+
+
+    const lyric =
+        lyricsData[
+            currentLyricIndex
+        ];
+
+
+    const elapsed =
+        currentTime -
+        lyric.time;
+
+
+    let nextTime =
+        Infinity;
+
+
+    if (
+        currentLyricIndex + 1 <
+        lyricsData.length
+    ) {
+
+        nextTime =
+            lyricsData[
+                currentLyricIndex + 1
+            ].time;
+    }
+
+
+    const interval =
+        nextTime -
+        lyric.time;
+
+
+    const spreadStart =
+        Math.max(
+            FORM_DURATION,
+            interval -
+            SPREAD_DURATION
+        );
+
+
+    for (
+        const p
+        of lyricParticles
+    ) {
+
+        if (
+            p.alpha <= 0
+        ) {
+
+            continue;
+        }
+
+
+        let drawX =
+            p.x;
+
+
+        let drawY =
+            p.y;
+
+
+        /*
+           Sedikit gerakan hidup
+           ketika tulisan sudah terbentuk.
+        */
+
+        if (
+            elapsed >
+            FORM_DURATION &&
+            elapsed <
+            spreadStart
+        ) {
+
+            const time =
+                performance.now() *
+                0.001 *
+                p.drift;
+
+
+            drawX +=
+                Math.sin(
+                    time +
+                    p.phase
+                ) *
+                0.35;
+
+
+            drawY +=
+                Math.cos(
+                    time * 0.8 +
+                    p.phase
+                ) *
+                0.25;
+        }
+
+
+        lyricCtx.globalAlpha =
+            Math.max(
+                0,
+                Math.min(
+                    1,
+                    p.alpha
+                )
+            );
+
+
+        lyricCtx.beginPath();
+
+
+        lyricCtx.arc(
+            drawX,
+            drawY,
+            p.size,
+            0,
+            Math.PI * 2
+        );
+
+
+        lyricCtx.fill();
+    }
+
+
+    lyricCtx.globalAlpha =
+        1;
+}
+
+
+/* ========================================================
+   15. FIND CURRENT LYRIC
+======================================================== */
+
+function findCurrentLyric(
+    currentTime
+) {
+
+    let found = 0;
+
+
+    for (
+        let i = 0;
+        i < lyricsData.length;
+        i++
+    ) {
+
+        if (
+            currentTime >=
+            lyricsData[i].time
+        ) {
+
+            found = i;
+
+        } else {
+
+            break;
+        }
+    }
+
+
+    return found;
+}
+
+
+/* ========================================================
+   16. SYNCHRONIZE LYRICS
+======================================================== */
+
+function synchronizeLyrics() {
+
+    /* Lirik hanya ditampilkan saat audio benar-benar diputar. */
+    const isAudioPlaying =
+        audioStarted &&
+        !audio.paused &&
+        !audio.ended;
+
+    if (!isAudioPlaying) {
+
+        if (
+            currentLyricIndex !== -1 ||
+            lyricParticles.length > 0
+        ) {
+            currentLyricIndex = -1;
+            lyricParticles = [];
+        }
+
+        lyricCtx.clearRect(
+            0,
+            0,
+            lyricW,
+            lyricH
+        );
+
+        requestAnimationFrame(
+            synchronizeLyrics
+        );
+
+        return;
+    }
+
+    /* Sinkronkan pergantian lirik dengan waktu lagu yang sebenarnya. */
+    const currentTime = audio.currentTime;
+
+    const index = findCurrentLyric(currentTime);
+
+    if (index !== currentLyricIndex) {
+        setLyric(index);
+    }
+
+    updateLyricParticles(currentTime);
+    drawLyric(currentTime);
+
+    requestAnimationFrame(
+        synchronizeLyrics
+    );
+}
+
+
+/* ========================================================
+   17. BACKGROUND CANVAS
+======================================================== */
+
+const smokeCanvas =
+    document.getElementById(
+        "smoke-canvas"
+    );
+
+
+const smokeCtx =
+    smokeCanvas.getContext(
+        "2d"
+    );
+
+
+let backgroundW = 0;
+
+let backgroundH = 0;
+
+
+/* ========================================================
+   18. STARS
+======================================================== */
+
+let stars = [];
+
+const STAR_COUNT = 180;
+
+
+/* ========================================================
+   19. CLOUDS
+======================================================== */
+
+let clouds = [];
+
+const CLOUD_COUNT = 8;
+
+const CLOUD_SPEED = 0.6;
+
+
+/* ========================================================
+   20. GRASS
+======================================================== */
+
+let farGrass = [];
+
+let frontGrass = [];
+
+
+/* ========================================================
+   21. RANDOM
+======================================================== */
+
+function random(
+    min,
+    max
+) {
+
+    return (
+        Math.random() *
+        (
+            max -
+            min
+        )
+    ) + min;
+}
+
+
+/* ========================================================
+   22. CREATE STARS
+======================================================== */
+
+function createStars() {
+
+    stars = [];
+
+
+    for (
+        let i = 0;
+        i < STAR_COUNT;
+        i++
+    ) {
+
+        stars.push({
+
+            x:
+                random(
+                    0,
+                    backgroundW
+                ),
+
+            y:
+                random(
+                    0,
+                    backgroundH * 0.68
+                ),
+
+            radius:
+                random(
+                    0.45,
+                    1.5
+                ),
+
+            alpha:
+                random(
+                    0.30,
+                    0.90
+                ),
+
+            phase:
+                Math.random() *
+                Math.PI *
+                2,
+
+            twinkle:
+                random(
+                    0.7,
+                    2.0
+                ),
+
+            speed:
+                random(
+                    4,
+                    11
+                ),
+
+            verticalSpeed:
+                random(
+                    0.4,
+                    1.4
+                ),
+
+            direction:
+                Math.random() >
+                0.5
+                    ? 1
+                    : -1
+        });
+    }
+}
+
+
+/* ========================================================
+   23. CREATE CLOUDS
+======================================================== */
+
+function createClouds() {
+
+    clouds = [];
+
+
+    for (
+        let i = 0;
+        i < CLOUD_COUNT;
+        i++
+    ) {
+
+        clouds.push({
+
+            x:
+                random(
+                    -backgroundW,
+                    backgroundW
+                ),
+
+            y:
+                random(
+                    backgroundH * 0.28,
+                    backgroundH * 0.68
+                ),
+
+            width:
+                random(
+                    260,
+                    520
+                ),
+
+            height:
+                random(
+                    35,
+                    85
+                ),
+
+            speed:
+                random(
+                    0.75,
+                    1.25
+                ),
+
+            direction:
+                Math.random() >
+                0.5
+                    ? 1
+                    : -1,
+
+            opacity:
+                random(
+                    0.06,
+                    0.13
+                ),
+
+            phase:
+                Math.random() *
+                Math.PI *
+                2
+        });
+    }
+}
+
+
+/* ========================================================
+   24. CREATE GRASS
+======================================================== */
+
+function createGrass() {
+
+    farGrass = [];
+
+    frontGrass = [];
+
+
+    const farCount =
+        Math.min(
+            500,
+            Math.max(
+                220,
+                Math.floor(
+                    backgroundW / 3
+                )
+            )
+        );
+
+
+    for (
+        let i = 0;
+        i < farCount;
+        i++
+    ) {
+
+        farGrass.push({
+
+            x:
+                random(
+                    -20,
+                    backgroundW + 20
+                ),
+
+            height:
+                random(
+                    28,
+                    78
+                ),
+
+            width:
+                random(
+                    1.5,
+                    4
+                ),
+
+            phase:
+                random(
+                    0,
+                    Math.PI * 2
+                ),
+
+            speed:
+                random(
+                    0.7,
+                    1.25
+                )
+        });
+    }
+
+
+    const frontCount =
+        Math.min(
+            430,
+            Math.max(
+                180,
+                Math.floor(
+                    backgroundW / 4
+                )
+            )
+        );
+
+
+    for (
+        let i = 0;
+        i < frontCount;
+        i++
+    ) {
+
+        frontGrass.push({
+
+            x:
+                random(
+                    -20,
+                    backgroundW + 20
+                ),
+
+            height:
+                random(
+                    50,
+                    145
+                ),
+
+            width:
+                random(
+                    3,
+                    7
+                ),
+
+            phase:
+                random(
+                    0,
+                    Math.PI * 2
+                ),
+
+            speed:
+                random(
+                    0.8,
+                    1.4
+                )
+        });
+    }
+}
+
+
+/* ========================================================
+   25. RESIZE BACKGROUND
+======================================================== */
+
+function resizeSmokeCanvas() {
+
+    const dpr =
+        Math.min(
+            window.devicePixelRatio || 1,
+            2
+        );
+
+
+    backgroundW =
+        window.innerWidth;
+
+
+    backgroundH =
+        window.innerHeight;
+
+
+    smokeCanvas.width =
+        Math.floor(
+            backgroundW *
+            dpr
+        );
+
+
+    smokeCanvas.height =
+        Math.floor(
+            backgroundH *
+            dpr
+        );
+
+
+    smokeCanvas.style.width =
+        backgroundW + "px";
+
+
+    smokeCanvas.style.height =
+        backgroundH + "px";
+
+
+    smokeCtx.setTransform(
+        dpr,
+        0,
+        0,
+        dpr,
+        0,
+        0
+    );
+
+
+    createStars();
+
+    createClouds();
+
+    createGrass();
+}
+
+
+window.addEventListener(
+    "resize",
+    resizeSmokeCanvas
+);
+
+
+resizeSmokeCanvas();
+
+
+/* ========================================================
+   26. MAIN RADIAL BACKGROUND
+======================================================== */
+
+function drawMainBackground() {
+
+    /*
+       SATU BACKGROUND UTAMA
+    */
+
+    const background =
+        smokeCtx.createRadialGradient(
+
+            backgroundW * 0.50,
+            backgroundH * 0.60,
+            0,
+
+            backgroundW * 0.50,
+            backgroundH * 0.60,
+
+            Math.max(
+                backgroundW,
+                backgroundH
+            ) * 0.95
+        );
+
+
+    background.addColorStop(
+        0,
+        "#21110f"
+    );
+
+
+    background.addColorStop(
+        0.20,
+        "#12101a"
+    );
+
+
+    background.addColorStop(
+        0.43,
+        "#090c17"
+    );
+
+
+    background.addColorStop(
+        0.70,
+        "#040710"
+    );
+
+
+    background.addColorStop(
+        1,
+        "#010207"
+    );
+
+
+    smokeCtx.fillStyle =
+        background;
+
+
+    smokeCtx.fillRect(
+        0,
+        0,
+        backgroundW,
+        backgroundH
+    );
+
+
+    /*
+       SUNSET SANGAT RENDAH
+       DAN MENYENTUH AREA RUMPUT
+    */
+
+    const sunsetX =
+        backgroundW * 0.50;
+
+
+    const sunsetY =
+        backgroundH * 0.91;
+
+
+    const sunsetRadius =
+        Math.max(
+            backgroundW,
+            backgroundH
+        ) * 0.62;
+
+
+    const sunset =
+        smokeCtx.createRadialGradient(
+
+            sunsetX,
+            sunsetY,
+            0,
+
+            sunsetX,
+            sunsetY,
+            sunsetRadius
+        );
+
+
+    sunset.addColorStop(
+        0,
+        "rgba(255,125,38,0.24)"
+    );
+
+
+    sunset.addColorStop(
+        0.12,
+        "rgba(250,105,31,0.19)"
+    );
+
+
+    sunset.addColorStop(
+        0.28,
+        "rgba(225,75,27,0.12)"
+    );
+
+
+    sunset.addColorStop(
+        0.48,
+        "rgba(150,48,25,0.065)"
+    );
+
+
+    sunset.addColorStop(
+        0.70,
+        "rgba(80,30,22,0.025)"
+    );
+
+
+    sunset.addColorStop(
+        1,
+        "rgba(0,0,0,0)"
+    );
+
+
+    smokeCtx.fillStyle =
+        sunset;
+
+
+    smokeCtx.fillRect(
+        0,
+        0,
+        backgroundW,
+        backgroundH
+    );
+
+
+    /*
+       GLOW TAMBAHAN DI BALIK RUMPUT
+    */
+
+    const grassGlow =
+        smokeCtx.createRadialGradient(
+
+            backgroundW * 0.50,
+            backgroundH * 0.96,
+            0,
+
+            backgroundW * 0.50,
+            backgroundH * 0.96,
+            backgroundW * 0.40
+        );
+
+
+    grassGlow.addColorStop(
+        0,
+        "rgba(255,135,45,0.14)"
+    );
+
+
+    grassGlow.addColorStop(
+        0.28,
+        "rgba(240,90,30,0.07)"
+    );
+
+
+    grassGlow.addColorStop(
+        0.65,
+        "rgba(150,45,22,0.025)"
+    );
+
+
+    grassGlow.addColorStop(
+        1,
+        "rgba(0,0,0,0)"
+    );
+
+
+    smokeCtx.fillStyle =
+        grassGlow;
+
+
+    smokeCtx.fillRect(
+        0,
+        0,
+        backgroundW,
+        backgroundH
+    );
+}
+
+
+/* ========================================================
+   27. DRAW STARS
+======================================================== */
+
+function drawStars(
+    time,
+    dt
+) {
+
+    for (
+        const star
+        of stars
+    ) {
+
+        /*
+           BINTANG BENAR-BENAR BERGERAK
+        */
+
+        star.x +=
+            star.speed *
+            star.direction *
+            dt;
+
+
+        star.y +=
+            Math.sin(
+                time * 0.35 +
+                star.phase
+            ) *
+            star.verticalSpeed *
+            dt;
+
+
+        /*
+           WRAP
+        */
+
+        if (
+            star.direction > 0 &&
+            star.x >
+            backgroundW + 8
+        ) {
+
+            star.x = -8;
+        }
+
+
+        if (
+            star.direction < 0 &&
+            star.x <
+            -8
+        ) {
+
+            star.x =
+                backgroundW + 8;
+        }
+
+
+        /*
+           KEDIP
+        */
+
+        const twinkle =
+            0.68 +
+            Math.sin(
+                time *
+                star.twinkle +
+                star.phase
+            ) *
+            0.27;
+
+
+        const alpha =
+            star.alpha *
+            twinkle;
+
+
+        smokeCtx.beginPath();
+
+
+        smokeCtx.arc(
+            star.x,
+            star.y,
+            star.radius,
+            0,
+            Math.PI * 2
+        );
+
+
+        smokeCtx.fillStyle =
+            `rgba(255,255,235,${alpha})`;
+
+
+        smokeCtx.fill();
+    }
+}
+
+
+/* ========================================================
+   28. DRAW SMOKE WISP
+======================================================== */
+
+function drawSmokeWisp(
+    cloud,
+    time
+) {
+
+    const driftY =
+        Math.sin(
+            time * 0.20 +
+            cloud.phase
+        ) * 13;
+
+
+    const centerY =
+        cloud.y +
+        driftY;
+
+
+    const puffCount = 7;
+
+
+    for (
+        let i = 0;
+        i < puffCount;
+        i++
+    ) {
+
+        const ratio =
+            i /
+            (puffCount - 1);
+
+
+        const px =
+            cloud.x -
+            cloud.width * 0.5 +
+            cloud.width *
+            ratio;
+
+
+        const wave =
+            Math.sin(
+                time * 0.32 +
+                cloud.phase +
+                i * 0.9
+            ) * 8;
+
+
+        const py =
+            centerY +
+            wave;
+
+
+        const pw =
+            cloud.width *
+            random(
+                0.24,
+                0.38
+            );
+
+
+        const ph =
+            cloud.height *
+            random(
+                0.65,
+                1.05
+            );
+
+
+        const radius =
+            Math.max(
+                pw,
+                ph
+            );
+
+
+        const gradient =
+            smokeCtx.createRadialGradient(
+
+                px,
+                py,
+                0,
+
+                px,
+                py,
+                radius
+            );
+
+
+        gradient.addColorStop(
+            0,
+            `rgba(175,180,195,${cloud.opacity})`
+        );
+
+
+        gradient.addColorStop(
+            0.35,
+            `rgba(135,142,160,${cloud.opacity * 0.62})`
+        );
+
+
+        gradient.addColorStop(
+            0.70,
+            `rgba(85,95,115,${cloud.opacity * 0.20})`
+        );
+
+
+        gradient.addColorStop(
+            1,
+            "rgba(0,0,0,0)"
+        );
+
+
+        smokeCtx.save();
+
+
+        smokeCtx.translate(
+            px,
+            py
+        );
+
+
+        smokeCtx.scale(
+            1.65,
+            0.58
+        );
+
+
+        smokeCtx.fillStyle =
+            gradient;
+
+
+        smokeCtx.beginPath();
+
+
+        smokeCtx.arc(
+            0,
+            0,
+            radius,
+            0,
+            Math.PI * 2
+        );
+
+
+        smokeCtx.fill();
+
+
+        smokeCtx.restore();
+    }
+}
+
+
+/* ========================================================
+   29. DRAW CLOUDS
+======================================================== */
+
+function drawClouds(
+    time,
+    dt
+) {
+
+    for (
+        const cloud
+        of clouds
+    ) {
+
+        cloud.x +=
+            cloud.direction *
+            cloud.speed *
+            CLOUD_SPEED *
+            dt;
+
+
+        const margin =
+            cloud.width *
+            0.7;
+
+
+        if (
+            cloud.direction > 0 &&
+            cloud.x >
+            backgroundW +
+            margin
+        ) {
+
+            cloud.x =
+                -margin;
+        }
+
+
+        if (
+            cloud.direction < 0 &&
+            cloud.x <
+            -margin
+        ) {
+
+            cloud.x =
+                backgroundW +
+                margin;
+        }
+
+
+        drawSmokeWisp(
+            cloud,
+            time
+        );
+    }
+}
+
+
+/* ========================================================
+   30. GRASS BLADE
+======================================================== */
+
+function drawGrassBlade(
+    blade,
+    baseY,
+    time,
+    alpha
+) {
+
+    const wind =
+        Math.sin(
+            time *
+            blade.speed +
+            blade.phase
+        );
+
+
+    const wind2 =
+        Math.sin(
+            time * 0.72 +
+            blade.phase * 1.7
+        );
+
+
+    const sway =
+        (
+            wind * 0.7 +
+            wind2 * 0.3
+        ) *
+        (
+            blade.height *
+            0.16
+        );
+
+
+    const tipX =
+        blade.x +
+        sway;
+
+
+    const tipY =
+        baseY -
+        blade.height;
+
+
+    const baseWidth =
+        blade.width;
+
+
+    const midY =
+        baseY -
+        blade.height * 0.45;
+
+
+    smokeCtx.beginPath();
+
+
+    smokeCtx.moveTo(
+        blade.x -
+        baseWidth,
+        baseY
+    );
+
+
+    smokeCtx.quadraticCurveTo(
+
+        blade.x -
+        baseWidth * 0.75 +
+        sway * 0.15,
+
+        midY,
+
+        tipX,
+        tipY
+    );
+
+
+    smokeCtx.quadraticCurveTo(
+
+        blade.x +
+        baseWidth * 0.75 +
+        sway * 0.15,
+
+        midY,
+
+        blade.x +
+        baseWidth,
+        baseY
+    );
+
+
+    smokeCtx.closePath();
+
+
+    smokeCtx.fillStyle =
+        `rgba(0,0,0,${alpha})`;
+
+
+    smokeCtx.fill();
+}
+
+
+/* ========================================================
+   31. DRAW GRASS
+======================================================== */
+
+function drawGrass(
+    time
+) {
+
+    /*
+       Tidak ada background
+       khusus untuk rumput.
+    */
+
+    const baseY =
+        backgroundH + 4;
+
+
+    /*
+       RUMPUT JAUH
+    */
+
+    for (
+        const blade
+        of farGrass
+    ) {
+
+        drawGrassBlade(
+            blade,
+            baseY,
+            time,
+            0.62
+        );
+    }
+
+
+    /*
+       RUMPUT DEPAN
+    */
+
+    for (
+        const blade
+        of frontGrass
+    ) {
+
+        drawGrassBlade(
+            blade,
+            baseY,
+            time,
+            0.93
+        );
+    }
+}
+
+
+/* ========================================================
+   32. BACKGROUND ANIMATION
+======================================================== */
+
+let lastBackgroundTime = 0;
+
+
+function animateBackground(
+    timestamp
+) {
+
+    const time =
+        timestamp / 1000;
+
+
+    let dt =
+        0.016;
+
+
+    if (
+        lastBackgroundTime
+    ) {
+
+        dt =
+            (
+                timestamp -
+                lastBackgroundTime
+            ) / 1000;
+
+
+        dt =
+            Math.min(
+                dt,
+                0.05
+            );
+    }
+
+
+    lastBackgroundTime =
+        timestamp;
+
+
+    /*
+       URUTAN PENTING:
+
+       1. Satu background
+       2. Sunset
+       3. Bintang
+       4. Asap
+       5. Rumput
+
+       Semua berada di canvas
+       background yang sama.
+    */
+
+    drawMainBackground();
+
+
+    drawStars(
+        time,
+        dt
+    );
+
+
+    drawClouds(
+        time,
+        dt
+    );
+
+
+    drawGrass(
+        time
+    );
+
+
+    requestAnimationFrame(
+        animateBackground
+    );
+}
+
+
+/* ========================================================
+   33. INITIAL STATE
+======================================================== */
+
+resizeLyricCanvas();
+
+resizeSmokeCanvas();
+
+
+/* ========================================================
+   34. START
+======================================================== */
+
+/* Latar belakang mulai bergerak, tetapi lirik menunggu audio. */
+started = false;
+audioStarted = false;
+visualStartTime = performance.now();
+
+requestAnimationFrame(
+    animateBackground
+);
+
+requestAnimationFrame(
+    synchronizeLyrics
+);
+
+</script>
+
+</body>
+</html>
